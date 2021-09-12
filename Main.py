@@ -5,7 +5,6 @@ from mlagents_envs.registry import default_registry
 
 import random
 import numpy as np
-import matplotlib.pyplot as plt
 import os
 import network
 from PPO import PPO
@@ -26,7 +25,7 @@ if __name__ == "__main__":
         # uncomment the folowing line if you want to load the environment without having to open unity
         # env = default_registry['CrawlerStaticTarget'].make(side_channels=[engine_channel])
 
-        engine_channel.set_configuration_parameters(time_scale = 1, width=1920, height=1080) # control time scale 0.5 - half speed, 10. - 10x time
+        engine_channel.set_configuration_parameters(time_scale = 5, width=1920, height=1080) # control time scale 0.5 - half speed, 10. - 10x time
         
         #Start interacting with the environment.
         env.reset()
@@ -66,7 +65,7 @@ if __name__ == "__main__":
             ppo.load_networks("results/ppo_actor.pth", "results/ppo_critic.pth")
         except:
             print("failed to find parameter files, will create new networks...")
-        ppo.just_roll()
-        #ppo.learn(700000)
+        #ppo.just_roll()
+        ppo.learn(700000)
     finally:
         env.close()

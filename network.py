@@ -21,21 +21,20 @@ class FeedForwardNN(nn.Module):
 		# will be handled by the pytorch library
 		# So we don't need to worry about that 
 		super(FeedForwardNN, self).__init__()
-
 		
-		self.input_layer = nn.Linear(in_dim, 64)
+		self.input_layer = nn.Linear(in_dim, 256)
 		
 		#---------------TASK-------------------#
 		# To make this into a deep neural network we would need to add atleast 2 more layers
 		# Don't forget to fix the forward propagation function
-		self.layer1 = nn.Linear(64, 64)
-		self.layer2 = nn.Linear(64, 32)
+		self.layer1 = nn.Linear(256, 256)
+		self.layer2 = nn.Linear(256, 256)
  		
 		
 
 
 		# keep the input dimension of the layer at 32  
-		self.output_layer = nn.Linear(32, out_dim)
+		self.output_layer = nn.Linear(256, out_dim)
 
 	def forward(self, obs):
 		"""
@@ -50,7 +49,6 @@ class FeedForwardNN(nn.Module):
 		if isinstance(obs, np.ndarray):
 			obs = torch.tensor(obs, dtype=torch.float)
         
-		
 		# Using relu activation function in between the layers 
 		activation_input = F.relu(self.input_layer(obs))        
 		
@@ -60,7 +58,6 @@ class FeedForwardNN(nn.Module):
 		activation1 = F.relu(self.layer1(activation_input))
 		activation2 = F.relu(self.layer2(activation1))
 		
-		# Do you know why we don't need to apply the activation function over the last layer? 
 		output = self.output_layer(activation2)
 		
 		return output
