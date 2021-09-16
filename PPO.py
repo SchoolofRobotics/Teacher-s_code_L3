@@ -89,8 +89,8 @@ class PPO:
 		}
 
 	def load_networks(self, act_path, cri_path):
-		self.actor.load_state_dict(torch.load(act_path))
-		self.critic.load_state_dict(torch.load(cri_path))
+		self.actor.load_state_dict(torch.load(act_path,torch.device(self.dev)))
+		self.critic.load_state_dict(torch.load(cri_path,torch.device(self.dev)))
 		self.actor_optim = torch.optim.Adam(self.actor.parameters(), lr= self.actor_lr)
 		self.critic_optim = torch.optim.Adam(self.critic.parameters(), lr= self.critic_lr)
 
@@ -126,11 +126,7 @@ class PPO:
 			                                                                      
 			# Calculate the advantage
 			A_k = self.buffer.batch_rtgs - V.detach()
-			# One of the only tricks I use that isn't in the pseudocode. Normalizing advantages
-			# isn't theoretically necessary, but in practice it decreases the variance of 
-			# our advantages and makes convergence much more stable and faster. I added this because
-			# solving some environments was too unstable without it.
-			#A_k = (A_k - A_k.mean()) / (A_k.std() + 1e-10)
+			
 			
 
 			# This is the loop where we update our network for some n epochs
@@ -163,9 +159,10 @@ class PPO:
 				# performance function maximizes it.
 				actor_loss = -torch.min(surr1, surr2) 
 				critic_loss = nn.MSELoss()(V, batch_rtgs)
+				entropy=self.entropy_beta*entropy
 				#----------------------------------Task-----------------------------------#
 				# Write total loss function and make backward propagation on the actor.
-				total_loss = self.critic_discount * critic_loss + actor_loss - self.entropy_beta * entropy
+				total_loss = self.critic_discount * critic_loss + actor_loss - entropy
 
 
 				# Calculate gradients and perform backward propagation for actor and critic networks
@@ -187,7 +184,7 @@ class PPO:
 				
 
 
-				# Save our model if it's time
+			# Save our model if it's time
 			if i_so_far % self.save_freq == 0:
 				print("saving model...")
 				torch.save(self.actor.state_dict(), f'results/ppo_actor.pth')
@@ -197,6 +194,7 @@ class PPO:
 			self._log_summary()
 		torch.save(self.actor.state_dict(), f'results/ppo_actor.pth')
 		torch.save(self.critic.state_dict(), f'results/ppo_critic.pth')
+		# Here we plot the learning data.
 		plt.plot( len(self.logger['actor_losses']), \
 			self.logger['actor_losses'], \
 			label="Actor loss")
@@ -374,10 +372,6 @@ class PPO:
 				temp_batch_log_probs[agent_id] = []
 				ep_rews[agent_id] = []
 				done[agent_id] = True				
-			# If all the agents are terminated, break
-			if len(terminal_steps) >= total_agents:
-				print ("all agents terminated. Breaking")
-				break
 		# Track episodic lenghts and rewards
 		for agent_id in range(total_agents):
 			# if got observations and took actions, but received no reward, just ignore the results
@@ -505,8 +499,8 @@ class PPO:
 		# Initialize default values for hyperparameters
 		# Algorithm hyperparameters	
 		self.timesteps_per_buffer = 2048			    # Number of timesteps to run per buffer		
-		self.timesteps_per_batch = 1024                  # Number of timesteps to run per batch
-		self.max_timesteps_per_episode = 1000           # Max number of timesteps per episode
+		self.timesteps_per_batch = 512                  # Number of timesteps to run per batch
+		self.max_timesteps_per_episode = 5000           # Max number of timesteps per episode
 		self.n_updates_per_iteration = 3                # Number of times to update actor/critic per iteration
 		self.actor_lr = 0.0003                          # Learning rate of optimizers
 		self.critic_lr= 0.003
