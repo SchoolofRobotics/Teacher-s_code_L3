@@ -33,7 +33,7 @@ class FeedForwardNN(nn.Module):
 		
 
 
-		# keep the input dimension of the layer at 32  
+		# keep the input dimension of the layer at 256  
 		self.output_layer = nn.Linear(256, out_dim)
 
 	def forward(self, obs):
@@ -55,6 +55,7 @@ class FeedForwardNN(nn.Module):
 		
 		#-------------------TASK----------------#
 		# Implement deep layers in feed forward process
+		# Use relu for all the layers
 		activation1 = F.relu(self.layer1(activation_input))
 		activation2 = F.relu(self.layer2(activation1))
 		
